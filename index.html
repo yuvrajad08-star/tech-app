@@ -1,25 +1,106 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tech Library</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>TechHack AI Archive</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #000; color: #00ff41; font-family: monospace; padding: 20px; }
-        .header { border-bottom: 2px solid #00ff41; padding-bottom: 10px; margin-bottom: 20px; }
-        .post { background: rgba(0, 255, 65, 0.1); border: 1px solid #00ff41; padding: 15px; margin-bottom: 10px; }
+        body { 
+            background-color: #0a0a0a; 
+            color: #00ffcc; 
+            font-family: 'Courier New', monospace; 
+            margin: 0;
+            padding: 20px; 
+            text-shadow: 0 0 5px rgba(0, 255, 204, 0.5); 
+        }
+        .header { 
+            text-align: center; 
+            border-bottom: 2px solid #00ffcc; 
+            padding-bottom: 10px; 
+            margin-bottom: 30px; 
+        }
+        .post-card { 
+            background: rgba(17, 17, 17, 0.9); 
+            border: 1px solid #00ffcc; 
+            padding: 15px; 
+            margin-bottom: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.1); 
+            transition: 0.3s; 
+        }
+        .post-card:hover { 
+            transform: scale(1.02); 
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3); 
+        }
+        .post-title { 
+            font-size: 1.3rem; 
+            font-weight: bold; 
+            color: #ff00ff; 
+            margin-bottom: 10px; 
+            border-left: 3px solid #ff00ff; 
+            padding-left: 10px; 
+        }
+        .post-content { 
+            font-size: 1rem; 
+            line-height: 1.5; 
+            color: #e0e0e0; 
+        }
+        #loading { 
+            text-align: center; 
+            font-size: 1.2rem; 
+            margin-top: 50px; 
+            color: #00ffcc; 
+            animation: blink 1s infinite; 
+        }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
-    <div class="header">SYSTEM: TECH_ARCHive_V1</div>
-    <div class="post">
-        <h3>স্বাগতম হ্যাকার!</h3>
-        <p>এটি আপনার নতুন টেক লাইব্রেরি। এখানে আপনি সিক্রেট ফর্মুলাগুলো পোস্ট করবেন।</p>
+
+    <div class="header">
+        <h1>SYSTEM: TECHHACK_AI</h1>
     </div>
+
+    <div id="loading">CONNECTING TO DATABASE...</div>
+    <div id="posts-container"></div>
+
     <script>
-        let tg = window.Telegram.WebApp;
-        tg.expand();
+        // আপনার ডাটাবেস ইনফরমেশন আমি সরাসরি বসিয়ে দিয়েছি
+        const SUPABASE_URL = 'https://qghflbvolhhelmkuauas.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnaGZsYnZvbGhoZWxta3VhdWFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDAxMjUsImV4cCI6MjA4NTgxNjEyNX0.xWPafcpI45AKyxX4pwgkvXINbpzwCClnNMOHgziE3eo'; 
+
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function fetchPosts() {
+            const { data, error } = await _supabase
+                .from('posts')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            const container = document.getElementById('posts-container');
+            document.getElementById('loading').style.display = 'none';
+
+            if (error) {
+                container.innerHTML = `<div class="post-card" style="border-color: red; color: red;">ERROR: Access Denied. ${error.message}</div>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                container.innerHTML = `<div class="post-card" style="text-align:center;">NO LOGS FOUND. <br> ডাটাবেস খালি! Supabase Table Editor থেকে কিছু লিখুন।</div>`;
+                return;
+            }
+
+            container.innerHTML = data.map(post => `
+                <div class="post-card">
+                    <div class="post-title">> ${post.title || 'Untitled'}</div>
+                    <div class="post-content">${post.content || 'No content available.'}</div>
+                </div>
+            `).join('');
+        }
+
+        // পেজ লোড হলেই ডাটা নিয়ে আসবে
+        fetchPosts();
     </script>
 </body>
 </html>
