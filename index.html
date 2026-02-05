@@ -3,76 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TechArchive Hyper Pro</title>
+    <title>TechArchive Hyper Pro Fixed</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --neon: #00ffcc; --neon-pink: #ff00ff; --bg: #020202; }
+        :root { --neon: #00ffcc; --bg: #020202; }
         body { background: var(--bg); color: #fff; font-family: 'Poppins', sans-serif; margin: 0; overflow-x: hidden; }
-        
-        /* Particle Background */
         #particles-js { position: fixed; inset: 0; z-index: -1; }
-
-        /* Header UI */
-        .header { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(25px); padding: 25px; text-align: center; border-bottom: 2px solid var(--neon); position: sticky; top: 0; z-index: 1000; box-shadow: 0 5px 20px rgba(0, 255, 204, 0.2); }
-        .header h1 { margin: 0; font-size: 1.6rem; letter-spacing: 5px; text-shadow: 0 0 10px var(--neon); }
-        .search-bar { width: 85%; max-width: 500px; padding: 14px; border-radius: 30px; border: 1px solid var(--neon); background: rgba(255,255,255,0.05); color: #fff; margin-top: 15px; outline: none; transition: 0.3s; }
-        .search-bar:focus { box-shadow: 0 0 15px var(--neon); background: rgba(0, 255, 204, 0.1); }
-
-        /* Feed Styling */
+        .header { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(25px); padding: 25px; text-align: center; border-bottom: 2px solid var(--neon); position: sticky; top: 0; z-index: 1000; }
+        .search-bar { width: 85%; max-width: 500px; padding: 12px; border-radius: 30px; border: 1px solid var(--neon); background: rgba(255,255,255,0.05); color: #fff; margin-top: 15px; outline: none; }
+        
         #posts-container { padding: 25px; max-width: 800px; margin: auto; }
-        .post-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border-radius: 25px; overflow: hidden; margin-bottom: 40px; border: 1px solid rgba(255, 255, 255, 0.1); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); animation: slideUp 0.6s ease; }
-        .post-card:hover { transform: scale(1.02); border-color: var(--neon); box-shadow: 0 15px 40px rgba(0,0,0,0.5); }
-        .post-img { width: 100%; height: 250px; object-fit: cover; filter: brightness(0.8); transition: 0.5s; }
-        .post-card:hover .post-img { filter: brightness(1.1); }
+        .post-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border-radius: 25px; overflow: hidden; margin-bottom: 35px; border: 1px solid rgba(255, 255, 255, 0.1); transition: 0.4s; }
+        .post-img { width: 100%; height: 230px; object-fit: cover; cursor: pointer; }
+        .post-body { padding: 20px; }
+        .post-title { font-size: 1.5rem; margin: 10px 0; color: var(--neon); }
+        .post-excerpt { color: #ccc; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
         
-        .post-body { padding: 25px; }
-        .post-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--neon); margin-bottom: 12px; font-weight: bold; text-transform: uppercase; }
-        .post-title { font-size: 1.6rem; margin: 0 0 12px 0; color: #fff; line-height: 1.3; }
-        .post-excerpt { color: #bbb; line-height: 1.7; margin-bottom: 20px; font-size: 1rem; }
+        /* Full Post Modal */
+        .modal-view { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; overflow-y: auto; padding: 20px; animation: fadeIn 0.3s; }
+        .modal-content-view { background: #111; max-width: 700px; margin: 40px auto; padding: 25px; border-radius: 25px; border: 1px solid var(--neon); position: relative; }
+        .close-view { position: absolute; top: 15px; right: 20px; font-size: 35px; color: var(--neon); cursor: pointer; }
         
-        .action-row { display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px; }
-        .btn-grad { background: none; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 18px; border-radius: 20px; cursor: pointer; transition: 0.3s; font-size: 0.85rem; }
-        .btn-grad:hover { background: var(--neon); color: #000; border-color: var(--neon); font-weight: bold; }
+        .action-btn { background: none; border: 1px solid var(--neon); color: var(--neon); padding: 8px 15px; border-radius: 20px; cursor: pointer; margin-top: 15px; font-weight: bold; }
+        .action-btn:hover { background: var(--neon); color: #000; }
 
-        /* Floating Admin Button */
-        .admin-fab { position: fixed; bottom: 35px; right: 35px; width: 65px; height: 65px; background: linear-gradient(45deg, var(--neon), var(--neon-pink)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 26px; box-shadow: 0 0 30px rgba(0, 255, 204, 0.5); cursor: pointer; z-index: 2000; transition: 0.4s; }
-        .admin-fab:hover { transform: rotate(90deg) scale(1.1); }
-
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div id="particles-js"></div>
-
     <div class="header">
-        <h1><i class="fas fa-microchip"></i> TECH_CORE_V3</h1>
+        <h1><i class="fas fa-terminal"></i> TECH_CORE_V3</h1>
         <input type="text" id="searchInput" class="search-bar" placeholder="Search archive..." oninput="searchPosts()">
     </div>
 
     <div id="posts-container"></div>
 
-    <div class="admin-fab" onclick="document.getElementById('adminModal').style.display='flex'"><i class="fas fa-plus"></i></div>
+    <div id="postView" class="modal-view">
+        <div class="modal-content-view">
+            <span class="close-view" onclick="closeView()">&times;</span>
+            <div id="fullData"></div>
+        </div>
+    </div>
 
-    <div id="adminModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:5000; align-items:center; justify-content:center; padding:20px;">
-        <div style="background:#111; padding:30px; border-radius:30px; border:1px solid var(--neon); width:100%; max-width:450px;">
-            <h2 style="color:var(--neon); margin:0 0 20px 0;">New Data Entry</h2>
-            <input type="password" id="pin" placeholder="Access PIN" style="width:100%; padding:12px; margin:10px 0; background:#222; border:1px solid #444; color:#fff; border-radius:10px;">
-            <input type="text" id="title" placeholder="Log Title" style="width:100%; padding:12px; margin:10px 0; background:#222; border:1px solid #444; color:#fff; border-radius:10px;">
-            <input type="text" id="img" placeholder="Visual URL (High Quality)" style="width:100%; padding:12px; margin:10px 0; background:#222; border:1px solid #444; color:#fff; border-radius:10px;">
-            <textarea id="cont" rows="4" placeholder="Description..." style="width:100%; padding:12px; margin:10px 0; background:#222; border:1px solid #444; color:#fff; border-radius:10px;"></textarea>
-            <button onclick="submitPost()" style="width:100%; padding:15px; background:var(--neon); border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:15px;">EXECUTE PUBLISH</button>
-            <button onclick="document.getElementById('adminModal').style.display='none'" style="width:100%; background:none; color:#777; border:none; margin-top:10px; cursor:pointer;">ABORT</button>
+    <div style="position:fixed; bottom:30px; right:30px; background:var(--neon); width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#000; cursor:pointer; z-index:2000;" onclick="document.getElementById('adminModal').style.display='flex'"><i class="fas fa-plus"></i></div>
+
+    <div id="adminModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:5000; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:#111; padding:25px; border-radius:20px; border:1px solid var(--neon); width:100%; max-width:400px;">
+            <input type="password" id="pin" placeholder="PIN" style="width:100%; margin:10px 0; padding:10px;">
+            <input type="text" id="title" placeholder="Title" style="width:100%; margin:10px 0; padding:10px;">
+            <input type="text" id="img" placeholder="Image URL" style="width:100%; margin:10px 0; padding:10px;">
+            <textarea id="cont" rows="4" placeholder="Content" style="width:100%; margin:10px 0; padding:10px;"></textarea>
+            <button onclick="submitPost()" style="width:100%; padding:10px; background:var(--neon); border:none; font-weight:bold;">PUBLISH</button>
+            <button onclick="document.getElementById('adminModal').style.display='none'" style="width:100%; background:none; color:#777; border:none; margin-top:10px;">Cancel</button>
         </div>
     </div>
 
     <script>
-        // Particles Config
-        particlesJS('particles-js', {
-            particles: { number: { value: 80 }, color: { value: '#00ffcc' }, shape: { type: 'circle' }, opacity: { value: 0.5 }, size: { value: 3 }, line_linked: { enable: true, distance: 150, color: '#00ffcc', opacity: 0.2, width: 1 }, move: { enable: true, speed: 2 } }
-        });
+        particlesJS('particles-js', { particles: { number: { value: 60 }, color: { value: '#00ffcc' }, shape: { type: 'circle' }, opacity: { value: 0.3 }, size: { value: 3 }, line_linked: { enable: true, distance: 150, color: '#00ffcc', opacity: 0.1, width: 1 }, move: { enable: true, speed: 1.5 } } });
 
         const SUPABASE_URL = 'https://qghflbvolhhelmkuauas.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnaGZsYnZvbGhoZWxta3VhdWFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDAxMjUsImV4cCI6MjA4NTgxNjEyNX0.xWPafcpI45AKyxX4pwgkvXINbpzwCClnNMOHgziE3eo';
@@ -87,22 +78,38 @@
             const container = document.getElementById('posts-container');
             container.innerHTML = data.map(post => `
                 <div class="post-card">
-                    ${post.image_url ? `<img src="${post.image_url}" class="post-img">` : ''}
+                    ${post.image_url ? `<img src="${post.image_url}" class="post-img" onclick="viewDetails(${post.id})">` : ''}
                     <div class="post-body">
-                        <div class="post-meta">
-                            <span><i class="fas fa-bolt"></i> ${post.category || 'Tech'}</span>
-                            <span><i class="far fa-clock"></i> ${new Date(post.created_at).toLocaleDateString()}</span>
-                        </div>
                         <h2 class="post-title">${post.title}</h2>
                         <div class="post-excerpt">${post.content}</div>
-                        <div class="action-row">
-                            <button class="btn-grad" onclick="alert('Views: ${post.views || 0}')"><i class="fas fa-eye"></i> ${post.views || 0}</button>
-                            <button class="btn-grad" onclick="alert('Likes updated!')"><i class="fas fa-heart"></i> ${post.likes || 0}</button>
-                            <button class="btn-grad"><i class="fas fa-share-nodes"></i></button>
-                        </div>
+                        <button class="action-btn" onclick="viewDetails(${post.id})">Read Full Log</button>
                     </div>
                 </div>
             `).join('');
+        }
+
+        async function viewDetails(id) {
+            const { data } = await _supabase.from('posts').select('*').eq('id', id).single();
+            // Update View Count
+            await _supabase.from('posts').update({ views: (data.views || 0) + 1 }).eq('id', id);
+
+            const fullData = document.getElementById('fullData');
+            fullData.innerHTML = `
+                ${data.image_url ? `<img src="${data.image_url}" style="width:100%; border-radius:15px; margin-bottom:20px;">` : ''}
+                <h1 style="color:var(--neon); margin:0;">${data.title}</h1>
+                <div style="color:#888; margin-bottom:15px; font-size:0.8rem;">
+                    <i class="fas fa-calendar"></i> ${new Date(data.created_at).toLocaleDateString()} | 
+                    <i class="fas fa-eye"></i> ${data.views || 1}
+                </div>
+                <p style="line-height:1.8; color:#eee; white-space:pre-wrap; font-size:1.1rem;">${data.content}</p>
+            `;
+            document.getElementById('postView').style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Stop scrolling background
+        }
+
+        function closeView() {
+            document.getElementById('postView').style.display = 'none';
+            document.body.style.overflow = 'auto';
         }
 
         async function submitPost() {
