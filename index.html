@@ -3,103 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TechHack AI Archive</title>
+    <title>TechArchive Pro | Admin</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { 
-            background-color: #0a0a0a; 
-            color: #00ffcc; 
-            font-family: 'Courier New', monospace; 
-            margin: 0;
-            padding: 20px; 
-            text-shadow: 0 0 5px rgba(0, 255, 204, 0.5); 
-        }
-        .header { 
-            text-align: center; 
-            border-bottom: 2px solid #00ffcc; 
-            padding-bottom: 10px; 
-            margin-bottom: 30px; 
-        }
-        .post-card { 
-            background: rgba(17, 17, 17, 0.9); 
-            border: 1px solid #00ffcc; 
-            padding: 15px; 
-            margin-bottom: 20px; 
-            border-radius: 8px; 
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.1); 
-            transition: 0.3s; 
-        }
-        .post-card:hover { 
-            transform: scale(1.02); 
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3); 
-        }
-        .post-title { 
-            font-size: 1.3rem; 
-            font-weight: bold; 
-            color: #ff00ff; 
-            margin-bottom: 10px; 
-            border-left: 3px solid #ff00ff; 
-            padding-left: 10px; 
-        }
-        .post-content { 
-            font-size: 1rem; 
-            line-height: 1.5; 
-            color: #e0e0e0; 
-        }
-        #loading { 
-            text-align: center; 
-            font-size: 1.2rem; 
-            margin-top: 50px; 
-            color: #00ffcc; 
-            animation: blink 1s infinite; 
-        }
-        @keyframes blink { 50% { opacity: 0; } }
+        :root { --neon: #00ffcc; --neon-pink: #ff00ff; --bg: #050505; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 80px; }
+        .header { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); padding: 20px; text-align: center; border-bottom: 1px solid var(--neon); position: sticky; top: 0; z-index: 100; }
+        .header h1 { margin: 0; font-size: 1.5rem; color: var(--neon); text-transform: uppercase; letter-spacing: 2px; }
+        
+        #posts-container { padding: 15px; max-width: 600px; margin: auto; }
+        .post-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 255, 204, 0.2); border-radius: 15px; padding: 20px; margin-bottom: 20px; transition: 0.3s; animation: fadeIn 0.5s ease; }
+        .post-card:hover { border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 255, 204, 0.2); }
+        .post-title { font-size: 1.2rem; color: var(--neon-pink); font-weight: bold; margin-bottom: 8px; }
+        .post-content { color: #ccc; line-height: 1.6; }
+
+        /* Admin Styles */
+        .admin-btn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--neon); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #000; font-size: 24px; cursor: pointer; box-shadow: 0 0 20px var(--neon); z-index: 1000; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; padding: 20px; align-items: center; justify-content: center; }
+        .modal-content { background: #111; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; border: 1px solid var(--neon); }
+        input, textarea { width: 100%; background: #222; border: 1px solid #444; color: #fff; padding: 12px; margin: 10px 0; border-radius: 8px; box-sizing: border-box; }
+        .btn-submit { background: var(--neon); color: #000; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>SYSTEM: TECHHACK_AI</h1>
+        <h1><i class="fas fa-terminal"></i> TECH_ARCHIVE_PRO</h1>
     </div>
 
-    <div id="loading">CONNECTING TO DATABASE...</div>
-    <div id="posts-container"></div>
+    <div id="posts-container">
+        <div style="text-align: center; margin-top: 50px; color: var(--neon);">BOOTING SYSTEM...</div>
+    </div>
+
+    <div class="admin-btn" onclick="openAdmin()"><i class="fas fa-plus"></i></div>
+
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--neon); margin-top:0;">New Log Entry</h2>
+            <input type="password" id="adminPin" placeholder="Enter Admin PIN">
+            <input type="text" id="postTitle" placeholder="Post Title">
+            <textarea id="postContent" rows="5" placeholder="Write content here..."></textarea>
+            <button class="btn-submit" onclick="submitPost()">PUBLISH TO CLOUD</button>
+            <button style="background:none; color: #666; border:none; margin-top:10px; cursor:pointer;" onclick="closeAdmin()">Cancel</button>
+        </div>
+    </div>
 
     <script>
-        // আপনার ডাটাবেস ইনফরমেশন আমি সরাসরি বসিয়ে দিয়েছি
         const SUPABASE_URL = 'https://qghflbvolhhelmkuauas.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnaGZsYnZvbGhoZWxta3VhdWFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDAxMjUsImV4cCI6MjA4NTgxNjEyNX0.xWPafcpI45AKyxX4pwgkvXINbpzwCClnNMOHgziE3eo'; 
-
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnaGZsYnZvbGhoZWxta3VhdWFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDAxMjUsImV4cCI6MjA4NTgxNjEyNX0.xWPafcpI45AKyxX4pwgkvXINbpzwCClnNMOHgziE3eo';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // আপনার গোপন পিন কোড (এটি আপনি পরিবর্তন করতে পারেন)
+        const ADMIN_PIN = "1234"; 
+
         async function fetchPosts() {
-            const { data, error } = await _supabase
-                .from('posts')
-                .select('*')
-                .order('created_at', { ascending: false });
-
+            const { data, error } = await _supabase.from('posts').select('*').order('created_at', { ascending: false });
             const container = document.getElementById('posts-container');
-            document.getElementById('loading').style.display = 'none';
-
-            if (error) {
-                container.innerHTML = `<div class="post-card" style="border-color: red; color: red;">ERROR: Access Denied. ${error.message}</div>`;
-                return;
-            }
-
-            if (!data || data.length === 0) {
-                container.innerHTML = `<div class="post-card" style="text-align:center;">NO LOGS FOUND. <br> ডাটাবেস খালি! Supabase Table Editor থেকে কিছু লিখুন।</div>`;
-                return;
-            }
-
-            container.innerHTML = data.map(post => `
+            if (error) { container.innerHTML = "Connection Error."; return; }
+            
+            container.innerHTML = data.length ? data.map(post => `
                 <div class="post-card">
-                    <div class="post-title">> ${post.title || 'Untitled'}</div>
-                    <div class="post-content">${post.content || 'No content available.'}</div>
+                    <div class="post-title">> ${post.title}</div>
+                    <div class="post-content">${post.content}</div>
                 </div>
-            `).join('');
+            `).join('') : '<div style="text-align:center;">No data in cloud.</div>';
         }
 
-        // পেজ লোড হলেই ডাটা নিয়ে আসবে
+        function openAdmin() { document.getElementById('adminModal').style.display = 'flex'; }
+        function closeAdmin() { document.getElementById('adminModal').style.display = 'none'; }
+
+        async function submitPost() {
+            const pin = document.getElementById('adminPin').value;
+            const title = document.getElementById('postTitle').value;
+            const content = document.getElementById('postContent').value;
+
+            if (pin !== ADMIN_PIN) { alert("Wrong PIN!"); return; }
+            if (!title || !content) { alert("Please fill all fields!"); return; }
+
+            const { error } = await _supabase.from('posts').insert([{ title, content }]);
+
+            if (error) {
+                alert("Upload failed: " + error.message);
+            } else {
+                alert("Post Published Successfully!");
+                closeAdmin();
+                fetchPosts(); // লিস্ট আপডেট করবে
+                document.getElementById('postTitle').value = '';
+                document.getElementById('postContent').value = '';
+            }
+        }
+
         fetchPosts();
     </script>
 </body>
